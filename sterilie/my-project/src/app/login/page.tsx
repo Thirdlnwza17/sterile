@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
-import { getFirestore, setDoc, doc } from "firebase/firestore";
-import { Timestamp } from "firebase/firestore";
+import { getFirestore, setDoc, doc, getDoc, Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -25,27 +24,31 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
       // Save user info to Firestore
       const db = getFirestore();
       const userRef = doc(db, "users", user.uid);
+
       // ดึงข้อมูล user เดิม
-      const userSnap = await (await import("firebase/firestore")).getDoc(userRef);
+      const userSnap = await getDoc(userRef);
       let role = "operator";
       if (userSnap.exists() && userSnap.data().role) {
         role = userSnap.data().role;
       }
+
       await setDoc(userRef, {
         email: user.email,
         lastLogin: Timestamp.now(),
         role,
       }, { merge: true });
+
       setSuccess("Login successful!");
       if (role === "admin") {
         router.replace("/dashboard");
       } else {
         router.replace("/history");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError("Login failed");
     } finally {
@@ -58,7 +61,13 @@ export default function LoginPage() {
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100 p-10 flex flex-col items-center">
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <Image src="/user.png" alt="User Icon" width={192} height={192} className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100" />
+          <Image
+            src="/user.png"
+            alt="User Icon"
+            width={192}
+            height={192}
+            className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100"
+          />
         </div>
         <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           เข้าสู่ระบบ
@@ -90,8 +99,10 @@ export default function LoginPage() {
         </form>
         {error && <div className="mt-4 text-red-500 font-medium text-center">{error}</div>}
         {success && <div className="mt-4 text-green-500 font-medium text-center">{success}</div>}
-        <Link href="/" className="mt-6 text-blue-500 hover:underline font-medium">← กลับหน้าแรก</Link>
+        <Link href="/" className="mt-6 text-blue-500 hover:underline font-medium">
+          ← กลับหน้าแรก
+        </Link>
       </div>
     </div>
   );
-} 
+}
