@@ -1,5 +1,9 @@
 // dbService.ts
-import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, doc, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, getDoc, getDocs, doc, Timestamp } from 'firebase/firestore';
+
+export interface SterilizerEntry extends Record<string, unknown> {
+  id?: string;
+}
 
 const COLLECTIONS = {
   gas: 'gas_logs',
@@ -16,7 +20,7 @@ export function getColByProgram(program: string): string | null {
 }
 
 // CREATE
-export async function createLog(program: string, data: any) {
+export async function createLog(program: string, data: SterilizerEntry) {
   const col = getColByProgram(program);
   if (!col) throw new Error('Invalid program type');
   const db = getFirestore();
@@ -32,18 +36,18 @@ export async function getAllLogs(col: string) {
   const db = getFirestore();
   const q = query(collection(db, col), orderBy('created_at', 'desc'));
   const snap = await getDocs(q);
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as SterilizerEntry);
 }
 
 // READ ONE
 export async function getLog(col: string, id: string) {
   const db = getFirestore();
   const snap = await getDoc(doc(db, col, id));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  return snap.exists() ? { id: snap.id, ...snap.data() } as SterilizerEntry : null;
 }
 
 // UPDATE
-export async function updateLog(program: string, id: string, data: any) {
+export async function updateLog(program: string, id: string, data: SterilizerEntry) {
   const col = getColByProgram(program);
   if (!col) throw new Error('Invalid program type');
   const db = getFirestore();
@@ -65,7 +69,7 @@ export async function getAllLogsFromAll() {
   const results = await Promise.all(colNames.map(async col => {
     const q = query(collection(db, col), orderBy('created_at', 'desc'));
     const snap = await getDocs(q);
-    return snap.docs.map(doc => ({ id: doc.id, ...doc.data(), _col: col }));
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data(), _col: col }) as SterilizerEntry);
   }));
   return results.flat();
 } 
@@ -73,31 +77,31 @@ export async function getAllLogsFromAll() {
 // --- เพิ่มฟังก์ชันสำหรับใช้งานใน history/page.tsx ---
 
 // Subscribe to manual entries
-export function subscribeSterilizerEntries(callback: (entries: any[]) => void) {
+export function subscribeSterilizerEntries(callback: (entries: SterilizerEntry[]) => void) {
   const db = getFirestore();
   const q = query(collection(db, "sterilizer_entries"), orderBy("test_date", "desc"));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as SterilizerEntry));
   });
 }
 
 // Subscribe to OCR entries
-export function subscribeOcrEntries(callback: (entries: any[]) => void) {
+export function subscribeOcrEntries(callback: (entries: SterilizerEntry[]) => void) {
   const db = getFirestore();
   const q = query(collection(db, "sterilizer_ocr_entries"), orderBy("created_at", "desc"));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as SterilizerEntry));
   });
 }
 
 // Add manual entry
-export async function addSterilizerEntry(data: any) {
+export async function addSterilizerEntry(data: SterilizerEntry) {
   const db = getFirestore();
   return await addDoc(collection(db, "sterilizer_entries"), data);
 }
 
 // Update manual entry
-export async function updateSterilizerEntry(id: string, data: any) {
+export async function updateSterilizerEntry(id: string, data: SterilizerEntry) {
   const db = getFirestore();
   return await updateDoc(doc(db, "sterilizer_entries", id), data);
 }
@@ -109,13 +113,13 @@ export async function deleteSterilizerEntry(id: string) {
 }
 
 // Add OCR entry
-export async function addOcrEntry(data: any) {
+export async function addOcrEntry(data: SterilizerEntry) {
   const db = getFirestore();
   return await addDoc(collection(db, "sterilizer_ocr_entries"), data);
 }
 
 // Update OCR entry
-export async function updateOcrEntry(id: string, data: any) {
+export async function updateOcrEntry(id: string, data: SterilizerEntry) {
   const db = getFirestore();
   return await updateDoc(doc(db, "sterilizer_ocr_entries", id), data);
 }
@@ -127,7 +131,7 @@ export async function deleteOcrEntry(id: string) {
 }
 
 // Log action (edit/delete)
-export async function logAction(action: string, entryId: string, before: any, after: any, user: string, role: string) {
+export async function logAction(action: string, entryId: string, before: SterilizerEntry, after: SterilizerEntry, user: string, role: string) {
   const db = getFirestore();
   return await addDoc(collection(db, "sterilizer_action_logs"), {
     action,
@@ -145,7 +149,7 @@ export async function checkOcrDuplicate(imageUrl: string, extractedText: string)
   const db = getFirestore();
   const q = query(collection(db, "sterilizer_ocr_entries"), orderBy("created_at", "desc"));
   const snapshot = await getDocs(q);
-  const existingEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+  const existingEntries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as SterilizerEntry[];
   const duplicates = existingEntries.filter(entry => {
     const imageMatch = entry.image_url === imageUrl;
     const textMatch = entry.extracted_text === extractedText;
