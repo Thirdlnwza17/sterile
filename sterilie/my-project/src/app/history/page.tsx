@@ -710,9 +710,6 @@ export default function HistoryPage() {
     return () => { if (el) el.removeEventListener('wheel', handler); };
   }, [showBigImage2]);
 
-  const lastTapBig1 = useRef(0);
-  const lastTapBig2 = useRef(0);
-
   useEffect(() => {
     if (showForm) {
       setSuccessMsg("");
