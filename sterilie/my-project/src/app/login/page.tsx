@@ -7,6 +7,7 @@ import { auth } from "../../firebaseConfig";
 import { getFirestore, setDoc, doc } from "firebase/firestore";
 import { Timestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,8 +45,9 @@ export default function LoginPage() {
       } else {
         router.replace("/history");
       }
-    } catch (err: any) {
-      setError(err.message || "Login failed");
+    } catch (err) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Login failed");
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ export default function LoginPage() {
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-gray-100 p-10 flex flex-col items-center">
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <img src="/user.png" alt="User Icon" className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100" />
+          <Image src="/user.png" alt="User Icon" width={192} height={192} className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100" />
         </div>
         <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
           เข้าสู่ระบบ
