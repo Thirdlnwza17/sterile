@@ -4,7 +4,7 @@ export default function DashboardDuplicateModal({ show, onClose, duplicateType, 
   show: boolean,
   onClose: () => void,
   duplicateType: 'image' | 'text' | 'both',
-  duplicateEntries: any[],
+  duplicateEntries: Record<string, any>[],
   onProceedWithSave: () => void,
   role: string
 }) {
