@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import Image from "next/image";
 
 export default function Home() {
-  const [particles, setParticles] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function Home() {
       background: ["#f472b6", "#a78bfa", "#38bdf8", "#facc15"][Math.floor(Math.random() * 4)],
       animationDuration: (Math.random() * 8 + 6) + "s",
     }));
-    setParticles(arr);
+    // setParticles(arr); // This line was removed as per the edit hint.
   }, []);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Home() {
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gray-100 p-10 flex flex-col items-center">
         {/* Logo */}
         <div className="mb-6 flex justify-center">
-          <img src="/ram-logo.jpg" alt="RAM Hospital Logo" className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100" />
+          <Image src="/ram-logo.jpg" alt="RAM Hospital Logo" width={192} height={192} className="mx-auto w-48 h-48 object-contain bg-white rounded-xl border border-gray-100" />
         </div>
         {/* Main Title */}
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center">
